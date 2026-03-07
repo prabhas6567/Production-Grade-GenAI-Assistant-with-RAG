@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>GenAI Chat Assistant</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            min-height: 100vh;
+        }
+        #chat-container {
+            max-width: 650px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 32px 24px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        #header {
+            text-align: center;
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #2a2a2a;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+            margin-bottom: 8px;
+            padding-right: 8px;
+        }
+        .bubble {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 20px;
+            margin: 10px 0;
+            max-width: 85%;
+            word-break: break-word;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            animation: fadeIn 0.4s;
+        }
+        .user {
+            background: linear-gradient(90deg, #d1e7ff 60%, #b6cfff 100%);
+            align-self: flex-end;
+            text-align: right;
+        }
+        .assistant {
+            background: linear-gradient(90deg, #f3f3f3 60%, #e0eafc 100%);
+            align-self: flex-start;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4f8cff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            color: #fff;
+            margin-top: 2px;
+        }
+        .assistant .avatar {
+            background: #ffb347;
+        }
+        .bubble-content {
+            flex: 1;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 2px;
+        }
+        #input-row {
+            display: flex;
+            gap: 8px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #b6cfff;
+            font-size: 1em;
+            background: #f7faff;
+        }
+        #send-button, #new-chat {
+            padding: 12px 22px;
+            border-radius: 10px;
+            border: none;
+            background: #4f8cff;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 1em;
+        }
+        #send-button:hover, #new-chat:hover {
+            background: #357ae8;
+        }
+        #loading {
+            text-align: center;
+            color: #357ae8;
+            font-weight: bold;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="header">🧠 GenAI Chat Assistant</div>
+        <div id="messages"></div>
+        <div id="loading" style="display:none;">Loading...</div>
+        <div id="input-row">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+            <button id="new-chat">New Chat</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        let sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+            sessionId = Math.random().toString(36).substring(2);
+            localStorage.setItem('sessionId', sessionId);
+        }
+        let conversationHistory = [];
+        const messagesDiv = document.getElementById('messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const loadingDiv = document.getElementById('loading');
+        const newChatBtn = document.getElementById('new-chat');
+
+        sendButton.onclick = sendMessage;
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+        newChatBtn.onclick = function() {
+            conversationHistory = [];
+            messagesDiv.innerHTML = '';
+        };
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            loadingDiv.style.display = 'block';
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({sessionId, message})
+            })
+            .then(res => res.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                conversationHistory.push({user: message, assistant: data.reply, time: new Date().toLocaleTimeString()});
+                renderMessages();
+                userInput.value = '';
+            })
+            .catch(() => {
+                loadingDiv.style.display = 'none';
+                alert('Error communicating with server.');
+            });
+        }
+
+        function renderMessages() {
+            messagesDiv.innerHTML = '';
+            conversationHistory.forEach(pair => {
+                messagesDiv.innerHTML += `
+                    <div class="bubble user">
+                        <div class="avatar">🧑</div>
+                        <div class="bubble-content">
+                            <div><b>You</b></div>
+                            <div>${escapeHtml(pair.user)}</div>
+                            <div class="timestamp">${pair.time}</div>
+                        </div>
+                    </div>
+                    <div class="bubble assistant">
+                        <div class="avatar">🤖</div>
+                        <div class="bubble-content">
+                            <div><b>Assistant</b></div>
+                            <div>${marked.parse(pair.assistant)}</div>
+                            <div class="timestamp">${pair.time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

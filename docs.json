@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Reset Password",
+    "content": "Users can reset their password from Settings > Security."
+  },
+  {
+    "title": "Account Creation",
+    "content": "Users can create an account by clicking on Sign Up."
+  },
+  {
+    "title": "Change Email",
+    "content": "To change your email address, go to Settings > Profile and update your email."
+  },
+  {
+    "title": "Delete Account",
+    "content": "Users can delete their account from Settings > Security > Delete Account."
+  },
+  {
+    "title": "Two-Factor Authentication",
+    "content": "Enable two-factor authentication in Settings > Security for extra protection."
+  },
+  {
+    "title": "Subscription Plans",
+    "content": "View and manage your subscription plans under Settings > Billing."
+  },
+  {
+    "title": "Contact Support",
+    "content": "Contact support via Help > Contact Us or email support@example.com."
+  },
+  {
+    "title": "Update Profile Picture",
+    "content": "Update your profile picture from Settings > Profile > Edit Picture."
+  },
+  {
+    "title": "Export Data",
+    "content": "Export your data from Settings > Privacy > Export Data."
+  },
+  {
+    "title": "App Notifications",
+    "content": "Manage notification preferences in Settings > Notifications."
+  }
+]
