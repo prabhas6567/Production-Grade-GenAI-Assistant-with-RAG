@@ -38,6 +38,7 @@ def generate_embedding(text):
     if response.status_code == 200:
         return response.json()["data"][0]["embedding"]
     else:
+        print(f"Embedding API error {response.status_code}: {response.text}")
         return [0.0]*768  # fallback
 
 # Vector storage (in-memory)
